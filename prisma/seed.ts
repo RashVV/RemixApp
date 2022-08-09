@@ -22,7 +22,7 @@ async function seed() {
 seed();
 
 function getJokes() {
-  // shout-out to https://icanhazdadjoke.com/
+  // shout-out to https://icanhazdadjoke.com
 
   return [
     {
