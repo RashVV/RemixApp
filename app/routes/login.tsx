@@ -5,13 +5,17 @@ import type {
 import { json } from "@remix-run/node";
 import {
   useActionData,
-  Link,
   useSearchParams,
+  Link,
 } from "@remix-run/react";
 
 import { db } from "~/utils/db.server";
-import { login, createUserSession } from "~/utils/session.server";
-import stylesUrl from "../styles/login.css";
+import {
+  createUserSession,
+  login,
+  register,
+} from "~/utils/session.server";
+import stylesUrl from "~/styles/login.css";
 
 export const links: LinksFunction = () => {
   return [{ rel: "stylesheet", href: stylesUrl }];
@@ -30,7 +34,6 @@ function validatePassword(password: unknown) {
 }
 
 function validateUrl(url: any) {
-  console.log(url);
   let urls = ["/jokes", "/", "https://remix.run"];
   if (urls.includes(url)) {
     return url;
@@ -85,7 +88,7 @@ export const action: ActionFunction = async ({
 
   switch (loginType) {
     case "login": {
-      const user = await login({ username, password });// login to get the user
+      const user = await login({ username, password });
       if (!user) {
         return badRequest({
           fields,
@@ -104,10 +107,14 @@ export const action: ActionFunction = async ({
           formError: `User with username ${username} already exists`,
         });
       }
+      const user = await register({ username, password });
+      if (!user) {
         return badRequest({
-        fields,
-        formError: "Not implemented",
-      });
+          fields,
+          formError: `Something went wrong trying to create a new user.`,
+        });
+      }
+      return createUserSession(user.id, redirectTo);
     }
     default: {
       return badRequest({
@@ -118,15 +125,10 @@ export const action: ActionFunction = async ({
   }
 };
 
-
-  // ...
-
-     
-
 export default function Login() {
   const actionData = useActionData<ActionData>();
   const [searchParams] = useSearchParams();
-    return (
+  return (
     <div className="container">
       <div className="content" data-light="">
         <h1>Login</h1>
